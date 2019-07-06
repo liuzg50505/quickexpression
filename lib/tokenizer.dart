@@ -9,47 +9,128 @@ const Map<String,int> binaryOperations = const {
 
 
 abstract class Token {
-  String code;
 
-  Token(this.code);
+  Token();
+
+  String toCodeString();
 
   @override
   String toString() {
-    return this.code;
+    return toCodeString();
   }
 
 
 }
 
-class OperatorToken extends Token {
-  OperatorToken(String code) : super(code);
+class SimpleToken extends Token {
+  String code;
+
+  SimpleToken(this.code);
+
+  @override
+  String toCodeString() {
+    return code;
+  }
+
 }
 
-class CommaToken extends Token {
-  CommaToken(String code) : super(code);
-}
-
-class DotToken extends Token {
-  DotToken(String code) : super(code);
-}
-
-class LiteralToken extends Token {
+class LiteralToken extends SimpleToken {
   LiteralToken(String code) : super(code);
 }
 
-class QuoteStartToken extends Token {
-  QuoteStartToken(String code) : super(code);
+class ComposedToken extends Token {
+  List<Token> tokens;
+
+  ComposedToken(this.tokens);
+
+  @override
+  String toCodeString() {
+    throw new Exception("Not implement exception!");
+  }
+
 }
 
-class QuoteEndToken extends Token {
-  QuoteEndToken(String code) : super(code);
+class ParenthesesComposedToken extends ComposedToken {
+  ParenthesesComposedToken(List<Token> tokens) : super(tokens);
+
+  @override
+  String toCodeString() {
+    return "(${tokens.map((t)=>t.toString()).join('')})";
+  }
+
 }
 
-class ExpressionToken extends Token {
+class FunctionParametersToken extends ComposedToken {
+  FunctionParametersToken(List<Token> tokens) : super(tokens);
+
+  @override
+  String toCodeString() {
+    return "(${tokens.map((t)=>t.toString()).join('')})";
+  }
+}
+
+class IndexParameterToken extends ComposedToken {
+  IndexParameterToken(List<Token> tokens) : super(tokens);
+
+  @override
+  String toCodeString() {
+    return "[${tokens.map((t)=>t.toString()).join('')}]";
+  }
+}
+
+class OperatorToken extends SimpleToken {
+  OperatorToken(String code) : super(code);
+}
+
+class CommaToken extends SimpleToken {
+  CommaToken(String code) : super(code);
+}
+
+class IdentityToken extends SimpleToken {
+  IdentityToken(String code) : super(code);
+}
+
+class DotToken extends SimpleToken {
+  DotToken(String code) : super(code);
+}
+
+class StringToken extends LiteralToken {
+  StringToken(String code) : super(code);
+}
+
+class NumberToken extends LiteralToken {
+  NumberToken(String code) : super(code);
+}
+
+class BoolToken extends LiteralToken {
+  BoolToken(String code) : super(code);
+}
+
+class NullToken extends LiteralToken {
+  NullToken(String code) : super(code);
+}
+
+class ParenthesesStartToken extends SimpleToken {
+  ParenthesesStartToken(String code) : super(code);
+}
+
+class ParenthesesEndToken extends SimpleToken {
+  ParenthesesEndToken(String code) : super(code);
+}
+
+class BracketStartToken extends SimpleToken {
+  BracketStartToken(String code) : super(code);
+}
+
+class BracketEndToken extends SimpleToken {
+  BracketEndToken(String code) : super(code);
+}
+
+class ExpressionToken extends SimpleToken {
   ExpressionToken(String code) : super(code);
 }
 
-class UnTokenizedToken extends Token {
+class UnTokenizedToken extends SimpleToken {
   UnTokenizedToken(String code) : super(code);
 }
 
@@ -73,7 +154,7 @@ class Tokenizer {
       var c = code.substring(i, i + 1);
       if (c == "'"||i==code.length-1) {
         if (instringtoken) {
-          tokens.add(LiteralToken(code.substring(pos, i + 1)));
+          tokens.add(StringToken(code.substring(pos, i + 1)));
           instringtoken = false;
           pos = i + 1;
         } else {
@@ -87,6 +168,33 @@ class Tokenizer {
     return tokens;
   }
 
+  List<Token> tokenizeStrings2(String code) {
+    List<Token> tokens = List();
+    int pos = 0;
+    bool instringtoken = false;
+    String tokenchar = null;
+    String singleQuote = "'";
+    String doubleQuote = '"';
+    for (int i = 0; i < code.length; i++) {
+      var c = code.substring(i, i + 1);
+
+      if(!instringtoken&&(c == singleQuote||c==doubleQuote)){
+        tokenchar = c;
+        tokens.add(UnTokenizedToken(code.substring(pos, i)));
+        instringtoken = true;
+        pos = i;
+      }else if(instringtoken&&c==tokenchar) {
+        tokens.add(StringToken(code.substring(pos, i + 1)));
+        instringtoken = false;
+        pos = i + 1;
+      }
+    }
+    if(pos<code.length-1) {
+      tokens.add(UnTokenizedToken(code.substring(pos)));
+    }
+    return tokens;
+  }
+
   List<Token> tokenizeParentheses(String code) {
     List<Token> tokens = List();
     int pos = 0;
@@ -94,11 +202,11 @@ class Tokenizer {
       var c = code.substring(i, i + 1);
       if (c == '(') {
         tokens.add(UnTokenizedToken(code.substring(pos, i)));
-        tokens.add(QuoteStartToken('('));
+        tokens.add(ParenthesesStartToken('('));
         pos = i+1;
       }else if(c==')'){
         tokens.add(UnTokenizedToken(code.substring(pos, i)));
-        tokens.add(QuoteStartToken(')'));
+        tokens.add(ParenthesesEndToken(')'));
         pos = i+1;
       }else if(i==code.length-1) {
         tokens.add(UnTokenizedToken(code.substring(pos)));
@@ -146,11 +254,11 @@ class Tokenizer {
       var c = code.substring(i, i + 1);
       if (c == '[') {
         tokens.add(UnTokenizedToken(code.substring(pos, i)));
-        tokens.add(QuoteStartToken('['));
+        tokens.add(BracketStartToken('['));
         pos = i+1;
       }else if(c==']'){
         tokens.add(UnTokenizedToken(code.substring(pos, i)));
-        tokens.add(QuoteStartToken(']'));
+        tokens.add(BracketEndToken(']'));
         pos = i+1;
       }else if(i==code.length-1) {
         tokens.add(UnTokenizedToken(code.substring(pos)));
@@ -186,6 +294,46 @@ class Tokenizer {
     return tokens;
   }
 
+  List<Token> tokenizeNumbers(String code) {
+    List<Token> r = List();
+    try{
+      num.parse(code);
+      r.add(NumberToken(code));
+      return r;
+    }catch(e) {
+      r.add(UnTokenizedToken(code));
+    }
+    return r;
+  }
+
+  List<Token> tokenizeBools(String code) {
+    List<Token> r = List();
+      if(code.trim()=="true"||code.trim()=="false"){
+        r.add(BoolToken(code));
+      }else{
+        r.add(UnTokenizedToken(code));
+      }
+    return r;
+  }
+
+  List<Token> tokenizeNulls(String code) {
+    List<Token> r = List();
+      if(code.trim()=="null"){
+        r.add(NullToken(code));
+      }else{
+        r.add(UnTokenizedToken(code));
+      }
+    return r;
+  }
+
+  List<Token> tokenizeIdentityToken(String code) {
+    List<Token> r = List();
+    var newcode = code.replaceAll(' ', '');
+    if(newcode.isEmpty) return r;
+    r.add(IdentityToken(newcode));
+    return r;
+  }
+
   List<Token> performSubTokenize(List<Token> tokens, Function tokenfunc) {
     List<Token> r = List();
     for(Token token in tokens) {
@@ -199,19 +347,171 @@ class Tokenizer {
     return r;
   }
 
+  List<Token> composeParentheses(List<Token> tokens) {
+    List<Token> r = List();
+    int parenthesesLevel = 0;
+    Token prevToken = null;
+    bool inParentheses = false;
+    List<Token> toplevelTokens = [];
+    for (int i=0;i<tokens.length;i++) {
+      if(parenthesesLevel==0&&tokens[i] is ParenthesesStartToken && (prevToken==null||prevToken is OperatorToken||prevToken is ParenthesesStartToken)) {
+        inParentheses = true;
+      }
+
+      if(inParentheses) {
+        toplevelTokens.add(tokens[i]);
+      }else{
+        r.add(tokens[i]);
+      }
+
+      if(tokens[i] is ParenthesesStartToken) {
+        parenthesesLevel++;
+      }else if(tokens[i] is ParenthesesEndToken) {
+        parenthesesLevel--;
+      }
+      if(parenthesesLevel==0) {
+        if(inParentheses) {
+          var subtokens = toplevelTokens.sublist(1, toplevelTokens.length-1);
+          subtokens = composeParentheses(subtokens);
+          var composed = ParenthesesComposedToken(subtokens);
+          r.add(composed);
+          toplevelTokens.clear();
+        }
+        inParentheses = false;
+      }
+      prevToken = tokens[i];
+    }
+    return r;
+  }
+
+  List<Token> composeMethodCalls(List<Token> tokens) {
+    List<Token> r = List();
+    int parenthesesLevel = 0;
+    bool inParentheses = false;
+    List<Token> toplevelTokens = [];
+    for (int i=0;i<tokens.length;i++) {
+      if(parenthesesLevel==0&&tokens[i] is ParenthesesStartToken) {
+        inParentheses = true;
+      }
+
+      if(inParentheses) {
+        toplevelTokens.add(tokens[i]);
+      }else{
+        r.add(tokens[i]);
+      }
+
+      if(tokens[i] is ParenthesesStartToken) {
+        parenthesesLevel++;
+      }else if(tokens[i] is ParenthesesEndToken) {
+        parenthesesLevel--;
+      }
+      if(parenthesesLevel==0) {
+        if(inParentheses) {
+          var subtokens = toplevelTokens.sublist(1, toplevelTokens.length-1);
+          subtokens = composeParentheses(subtokens);
+          var composed = FunctionParametersToken(subtokens);
+          r.add(composed);
+          toplevelTokens.clear();
+        }
+        inParentheses = false;
+      }
+    }
+    for(Token token in r) {
+      if(token is ComposedToken) {
+        ComposedToken composedToken = token;
+        composedToken.tokens = composeMethodCalls(composedToken.tokens);
+      }
+    }
+    return r;
+  }
+
+  List<Token> composeIndexBrackets(List<Token> tokens) {
+    List<Token> r = List();
+    int bracketsLevel = 0;
+    bool inbrackets = false;
+    List<Token> toplevelTokens = [];
+    for (int i=0;i<tokens.length;i++) {
+      if(bracketsLevel==0&&tokens[i] is BracketStartToken) {
+        inbrackets = true;
+      }
+
+      if(inbrackets) {
+        toplevelTokens.add(tokens[i]);
+      }else{
+        r.add(tokens[i]);
+      }
+
+      if(tokens[i] is BracketStartToken) {
+        bracketsLevel++;
+      }else if(tokens[i] is BracketEndToken) {
+        bracketsLevel--;
+      }
+      if(bracketsLevel==0) {
+        if(inbrackets) {
+          var subtokens = toplevelTokens.sublist(1, toplevelTokens.length-1);
+          subtokens = composeIndexBrackets(subtokens);
+          var composed = IndexParameterToken(subtokens);
+          r.add(composed);
+          toplevelTokens.clear();
+        }
+        inbrackets = false;
+      }
+    }
+    for(Token token in r) {
+      if(token is ComposedToken) {
+        ComposedToken composedToken = token;
+        composedToken.tokens = composeIndexBrackets(composedToken.tokens);
+      }
+    }
+    return r;
+  }
+
+
+  List<ComposedToken> findComposedTokens(Token token) {
+    if(token is! ComposedToken) {
+      return [];
+    }else{
+      List<ComposedToken> r = List();
+      ComposedToken composedToken = token;
+      for(Token subToken in composedToken.tokens) {
+        if(subToken is ComposedToken) {
+          r.add(subToken);
+          r.addAll(findComposedTokens(subToken));
+        }
+      }
+      return r;
+    }
+  }
+
+  List<ComposedToken> findAllComposedTokens(List<Token> tokens) {
+    List<ComposedToken> r = List();
+    for(Token token in tokens) {
+      if(token is ComposedToken) {
+        r.add(token);
+        r.addAll(findComposedTokens(token));
+      }
+    }
+    return r;
+  }
+
+
   tokenize(String code) {
-    List<Token> tokens = tokenizeStrings(code);
+    List<Token> tokens = tokenizeStrings2(code);
     tokens = performSubTokenize(tokens, tokenizeParentheses);
     tokens = performSubTokenize(tokens, tokenizeBrackets);
     tokens = performSubTokenize(tokens, tokenizeOperators);
     tokens = performSubTokenize(tokens, tokenizeComma);
     tokens = performSubTokenize(tokens, tokenizeDot);
-    tokens = tokens.where((token) {
-      if(token is UnTokenizedToken) {
-        return token.code.trim().isNotEmpty;
-      }
-      return true;
-    }).toList();
+    tokens = performSubTokenize(tokens, tokenizeNumbers);
+    tokens = performSubTokenize(tokens, tokenizeBools);
+    tokens = performSubTokenize(tokens, tokenizeNulls);
+    tokens = performSubTokenize(tokens, tokenizeIdentityToken);
+    tokens = composeParentheses(tokens);
+    tokens = composeMethodCalls(tokens);
+    tokens = composeIndexBrackets(tokens);
+
+//    var composedTokens = findAllComposedTokens(tokens);
+
     return tokens;
   }
 }
