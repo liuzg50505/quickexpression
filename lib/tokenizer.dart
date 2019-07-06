@@ -12,6 +12,8 @@ abstract class Token {
 
   Token();
 
+  String get typeName;
+
   String toCodeString();
 
   @override
@@ -22,7 +24,7 @@ abstract class Token {
 
 }
 
-class SimpleToken extends Token {
+abstract class SimpleToken extends Token {
   String code;
 
   SimpleToken(this.code);
@@ -34,19 +36,14 @@ class SimpleToken extends Token {
 
 }
 
-class LiteralToken extends SimpleToken {
+abstract class LiteralToken extends SimpleToken {
   LiteralToken(String code) : super(code);
 }
 
-class ComposedToken extends Token {
+abstract class ComposedToken extends Token {
   List<Token> tokens;
 
   ComposedToken(this.tokens);
-
-  @override
-  String toCodeString() {
-    throw new Exception("Not implement exception!");
-  }
 
 }
 
@@ -58,6 +55,9 @@ class ParenthesesComposedToken extends ComposedToken {
     return "(${tokens.map((t)=>t.toString()).join('')})";
   }
 
+  @override
+  String get typeName => "Parentheses";
+
 }
 
 class FunctionParametersToken extends ComposedToken {
@@ -67,6 +67,10 @@ class FunctionParametersToken extends ComposedToken {
   String toCodeString() {
     return "(${tokens.map((t)=>t.toString()).join('')})";
   }
+
+  @override
+  String get typeName => "FunctionParameters";
+
 }
 
 class IndexParameterToken extends ComposedToken {
@@ -76,62 +80,106 @@ class IndexParameterToken extends ComposedToken {
   String toCodeString() {
     return "[${tokens.map((t)=>t.toString()).join('')}]";
   }
+
+  @override
+  String get typeName => "IndexParameter";
+
 }
 
 class OperatorToken extends SimpleToken {
   OperatorToken(String code) : super(code);
+
+  @override
+  String get typeName => "Operator";
 }
 
 class CommaToken extends SimpleToken {
   CommaToken(String code) : super(code);
+
+  @override
+  String get typeName => "Comma";
 }
 
 class IdentityToken extends SimpleToken {
   IdentityToken(String code) : super(code);
+
+  @override
+  String get typeName => "Identity";
+
 }
 
 class DotToken extends SimpleToken {
   DotToken(String code) : super(code);
+
+  @override
+  String get typeName => "Dot";
+
 }
 
 class StringToken extends LiteralToken {
   StringToken(String code) : super(code);
+
+  @override
+  String get typeName => "String";
 }
 
 class NumberToken extends LiteralToken {
   NumberToken(String code) : super(code);
+
+  @override
+  String get typeName => "Number";
 }
 
 class BoolToken extends LiteralToken {
   BoolToken(String code) : super(code);
+
+  @override
+  String get typeName => "Bool";
 }
 
 class NullToken extends LiteralToken {
   NullToken(String code) : super(code);
+
+  @override
+  String get typeName => "Null";
 }
 
 class ParenthesesStartToken extends SimpleToken {
   ParenthesesStartToken(String code) : super(code);
+
+  @override
+  String get typeName => "ParenthesesStart";
+
 }
 
 class ParenthesesEndToken extends SimpleToken {
   ParenthesesEndToken(String code) : super(code);
+
+  @override
+  String get typeName => "ParenthesesEnd";
+
 }
 
 class BracketStartToken extends SimpleToken {
   BracketStartToken(String code) : super(code);
+
+  @override
+  String get typeName => "BracketStart";
 }
 
 class BracketEndToken extends SimpleToken {
   BracketEndToken(String code) : super(code);
-}
 
-class ExpressionToken extends SimpleToken {
-  ExpressionToken(String code) : super(code);
+  @override
+  String get typeName => "BracketEnd";
+
 }
 
 class UnTokenizedToken extends SimpleToken {
   UnTokenizedToken(String code) : super(code);
+
+  @override
+  String get typeName => "UnTokenized";
 }
 
 class Tokenizer {
@@ -514,4 +562,41 @@ class Tokenizer {
 
     return tokens;
   }
+}
+
+void printParsedToken(Token token, int level, int indents) {
+  String indentstr = '';
+  for(int i=0;i<level-1;i++) {
+    for(int j=0;j<indents;j++){
+      indentstr+=' ';
+    }
+  }
+  if(level>0) {
+    indentstr+="|";
+    for(int i=0;i<indents-1;i++) {
+      indentstr+='-';
+    }
+  }
+  if(token is ComposedToken) {
+    print('${indentstr}${token.typeName.toUpperCase()}: ${token.toCodeString()}');
+    ComposedToken composedToken = token;
+    for(Token subToken in composedToken.tokens) {
+      printParsedToken(subToken, level+1, indents);
+    }
+  }else{
+    print('${indentstr}${token.typeName.toUpperCase()} -> ${token.toCodeString()}');
+  }
+}
+
+void printParsedTokens(List<Token> tokens, [int indents=2]) {
+  for(Token token in tokens) {
+    printParsedToken(token, 1, indents);
+  }
+}
+
+void printASTTree(String expression, [int indents=2]) {
+  print('AST: ${expression}');
+  Tokenizer tokenizer = Tokenizer();
+  var tokens = tokenizer.tokenize(expression);
+  printParsedTokens(tokens, indents);
 }
