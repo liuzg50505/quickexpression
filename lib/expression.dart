@@ -295,6 +295,7 @@ class CallMethodExpression extends QuickExpression {
     Function func = caller.evaluate(context);
     List<Object> paramvalues = List();
     for(Token paramToken in parametersToken.tokens) {
+      if(paramToken is CommaToken) continue;
       var paramexp = expressionParser.parseExpression([paramToken]);
       var paramvalue = paramexp.evaluate(context);
       paramvalues.add(paramvalue);

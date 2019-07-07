@@ -1,16 +1,14 @@
 name: quickexpression
-description: A sample command-line application.
-# version: 1.0.0
-# homepage: https://www.example.com
-# author: liuzg <liuzg50505@qq.com>
+description: an expression evalutator for dart
+version: 1.0.0
+homepage: https://github.com/liuzg50505/quickexpression
+author: liuzg <liuzg50505@qq.com>
 
 environment:
   sdk: '>=2.2.0 <3.0.0'
 
-dependencies:
-  path: ^1.4.1
-  petitparser: any
-  quiver: any
+#dependencies:
+#  path: ^1.4.1
 
 dev_dependencies:
   pedantic: ^1.0.0
