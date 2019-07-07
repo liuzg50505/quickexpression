@@ -1,10 +1,6 @@
 
 import 'package:quickexpression/expression.dart';
-import 'package:quickexpression/quickexpression.dart' as quickexpression;
-import 'package:petitparser/petitparser.dart';
-import 'package:quickexpression/tokenizer.dart';
 
-import 'grammer.dart';
 
 main(List<String> arguments) {
 //  Tokenizer tokenizer = Tokenizer();
@@ -22,14 +18,14 @@ main(List<String> arguments) {
     "c": 4,
     "d": {
       "e":{
-        "f": ()=>3
+        "f": (t)=>3+t
       }
     }
   });
 
 
 
-  String expstr = "a+b*(c+2*3-d.e.f()+(6/3))/a+b";
+  String expstr = "a+b*(c+2*3-d.e.f(1)+(6/3))/a+b";
   ExpressionParser parser = new ExpressionParser(null);
   var expression = parser.parseExpressionText(expstr);
   var r = expression.evaluate(context);

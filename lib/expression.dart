@@ -337,7 +337,6 @@ class IndexMethodExpressoin extends QuickExpression {
 
 }
 
-
 class BinaryExpression extends QuickExpression {
   QuickExpression left;
   QuickExpression right;
